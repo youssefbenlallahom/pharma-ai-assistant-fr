@@ -1,0 +1,20 @@
+# Fichiers de configuration et environnement
+.env
+.env.local
+.env.development
+.env.production
+config/secrets/
+keys.json
+
+# Fichiers générés par les LLMs
+/output/
+*.md  # Exclut les fichiers markdown de sortie (sauf README)
+!README.md
+responses/
+cache/
+
+# Environnements virtuels
+.venv/
+venv/
+ENV/
+env/

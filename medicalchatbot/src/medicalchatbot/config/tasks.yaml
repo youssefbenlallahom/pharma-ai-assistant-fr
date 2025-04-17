@@ -1,0 +1,49 @@
+data_mining_task:
+  description: >
+    Extraire l’ensemble des informations médicales pertinentes sur le médicament {topic}
+    depuis des sources fiables telles que Vidal, Doctissimo, BDPM, etc.
+
+    L’objectif est d’obtenir un dossier complet structuré contenant :
+    - Composition
+    - Indications thérapeutiques
+    - Posologie
+    - Mode d’administration
+    - Contre-indications
+    - Effets indésirables
+    - Interactions médicamenteuses
+    - Mises en garde et précautions d’emploi
+    - Données pharmacocinétiques et pharmacodynamiques
+    - Recommandations en cas de grossesse/allaitement
+    - Surdosage
+  expected_output: >
+    Dossier structuré du médicament {topic} comprenant :
+    - Dictionnaire structuré avec les rubriques ci-dessus
+  agent: data_miner
+  async_execution: False
+
+
+knowledge_processing_task:  # Fusion analysis_task + rag_task
+  description: >
+    Transformer les données collectées en savoir structuré pour l'assistant :
+    1. Synthétiser les informations en fiche technique lisible
+    2. Créer des embeddings des concepts-clés
+    3. Générer un contexte optimisé pour l'étape de génération de réponse
+
+  expected_output: >
+    Paquet de connaissances contenant :
+    - Fiche technique structurée et lisible par un professionnel
+    - Contexte RAG formaté pour LLM
+
+  agent: knowledge_engine
+  async_execution: False
+
+response_generation_task:
+  description: >
+    Fournis uniquement la réponse finale sur la question posée :{topic}, claire et directement exploitable par un professionnel de santé.
+    La réponse doit être précise, concise, et uniquement répondre à la question sans ajout d'informations superflues.
+    Aucun raisonnement ou information non demandée ne doit être inclus.
+  expected_output: >
+    Une réponse médicale claire et directement liée à la question :{topic}, sans préambule.
+    La réponse doit être concise et uniquement basée sur les informations vérifiées fournies par le data_miner.
+  agent: pharma_assistant
+  async_execution: False

@@ -1,0 +1,26 @@
+[project]
+name = "medicalchatbot"
+version = "0.1.0"
+description = "MedicalChatbot using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "agentops>=0.4.6",
+    "crewai[tools]>=0.114.0,<1.0.0",
+    "langchain-groq>=0.3.2",
+    "langflow>=1.1.0",
+]
+
+[project.scripts]
+medicalchatbot = "medicalchatbot.main:run"
+run_crew = "medicalchatbot.main:run"
+train = "medicalchatbot.main:train"
+replay = "medicalchatbot.main:replay"
+test = "medicalchatbot.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
