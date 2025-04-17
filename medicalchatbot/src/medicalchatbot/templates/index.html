@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAI Assistant</title>
+    <!-- Ajout du favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='medbot-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='medbot-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medical.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .robot-gif {
+            height: 40px;
+            width: auto;
+            margin-right: 0px;
+            margin-left: 5px;
+            margin-top: 5px;
+        }
+        
+        .ai-avatar .robot-gif {
+            height: 30px;
+            width: auto;
+            margin-right: 0px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-logo">
+                <div class="logo-pulse"></div>
+                <!-- GIF de robot remplaçant l'icône par défaut -->
+                <img src="{{ url_for('static', filename='robot_9066270.gif') }}" alt="Robot médical" class="robot-gif">
+            </div>
+            <h1>MedAI Assistant</h1>
+            <button id="themeToggle" class="theme-toggle">
+                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <div class="info-banner animate__animated animate__fadeIn">
+            <div class="info-icon">ℹ️</div>
+            <p>Consultez votre médecin pour tout avis médical. Cet outil est informatif uniquement.</p>
+        </div>
+
+        <div class="chat-container">
+            <div class="message-container" id="messageContainer">
+                <!-- Message initial -->
+                <div class="message ai-message animate__animated animate__fadeInUp">
+                    <div class="avatar ai-avatar">
+                        <div class="avatar-pulse"></div>
+                        <!-- GIF de robot dans l'avatar des messages également -->
+                        <img src="{{ url_for('static', filename='robot_9066270.gif') }}" alt="Robot médical" class="robot-gif">
+                    </div>
+                    <div class="message-content">
+                        <p>Bonjour, je suis MedAI, votre assistant médical intelligent. Posez-moi vos questions sur les médicaments, les posologies ou les interactions.</p>
+                        <div class="medical-source">
+                            <span>Sources fiables :</span>
+                            <div class="source-tag">VIDAL</div>
+                            <div class="source-tag">BDPM</div>
+                            <div class="source-tag">HAS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <textarea class="chat-input" id="userInput" placeholder="Écrivez votre question médicale ici..." rows="1"></textarea>
+                <button class="send-button" id="sendBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                    <div class="send-ripple"></div>
+                </button>
+                <div class="suggestion-chips">
+                    <button class="chip animate__animated animate__fadeIn">Paracétamol vs Ibuprofène</button>
+                    <button class="chip animate__animated animate__fadeIn" style="animation-delay: 0.2s">Effets secondaires Metformine</button>
+                    <button class="chip animate__animated animate__fadeIn" style="animation-delay: 0.4s">Vaccin contre la grippe</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <p>© 2025 MedAI Assistant · Mentions légales · Confidentialité</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/medical.js') }}"></script>
+</body>
+</html>
