@@ -1,6 +1,6 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from crewai_tools import SerperDevTool, ScrapeWebsiteTool
+from crewai_tools import SerperDevTool, ScrapeWebsiteTool ,SeleniumScrapingTool
 from crewai import LLM
 from dotenv import load_dotenv
 import os
@@ -8,6 +8,11 @@ from langchain_groq import ChatGroq
 from litellm import completion
 from crewai import LLM as CrewLLM
 from langchain_community.llms import Ollama
+from crewai_tools import SeleniumScrapingTool
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 load_dotenv()
 
@@ -17,13 +22,63 @@ search_tool = SerperDevTool(
     locale="fr", 
     location="France")
 
-vidal_tool = ScrapeWebsiteTool(website="https://www.vidal.fr")
-bdpm_tool = ScrapeWebsiteTool(website="https://base-donnees-publique.medicaments.gouv.fr")
-passeport_tool = ScrapeWebsiteTool(website="https://www.passeportsante.net")
-santefr_tool = ScrapeWebsiteTool(website="https://www.sante.fr")
+vidal_tool = ScrapeWebsiteTool(website_url="https://www.vidal.fr")
+bdpm_tool = ScrapeWebsiteTool(website_url="https://base-donnees-publique.medicaments.gouv.fr")
+passeport_tool = ScrapeWebsiteTool(website_url="https://www.passeportsante.net")
+santefr_tool = ScrapeWebsiteTool(website_url="https://www.sante.fr")
+
+
+class MedicamentScrapingTool(SeleniumScrapingTool):
+    def __init__(self, website_url=""):
+        super().__init__(website_url=website_url)
+    
+    def scrape_with_more_button(self, url=None):
+        """Méthode personnalisée pour scraper avec clic sur 'voir plus'"""
+        if url:
+            self.website_url = url
+            
+        # Utiliser le driver Selenium pour naviguer
+        content = self.scrape()
+        
+        # Tentative de clic sur 'voir plus'
+        try:
+            # Liste des sélecteurs possibles pour 'voir plus'
+            selectors = [
+                "//button[contains(text(), 'Voir plus de détails')]",
+                "//a[contains(text(), 'Voir plus de détails')]",
+                "//span[contains(text(), 'voir plus')]",
+                "//div[contains(@class, 'readmore')]",
+                "//button[contains(@class, 'showmore')]",
+                ".toggledetailmed", 
+                ".btnplus",
+                "a[data-txt='Voir moins de détails']",
+                ".readmore-button",
+                "a:contains('Voir plus')",
+                "button:contains('Voir plus de détails')"
+            ]
+            
+            driver = self._get_driver()
+            
+            for selector in selectors:
+                try:
+                    more_button = WebDriverWait(driver, 3).until(
+                        EC.element_to_be_clickable((By.XPATH, selector))
+                    )
+                    more_button.click()
+                    time.sleep(2)  # Attendre le chargement du contenu
+                    break  # Sortir de la boucle si un bouton a été cliqué
+                except:
+                    continue
+                    
+            # Récupérer le contenu après avoir cliqué
+            return driver.page_source
+        except:
+            # En cas d'échec, retourner le contenu initial
+            return content
+        
+med_custom_scraper = MedicamentScrapingTool()
 
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
 llm1 = completion(
     model="llama-guard-3-8b",
@@ -36,7 +91,7 @@ Règles Absolues :
 2. Format de sortie strict : 
    - Dictionnaire JSON structuré
    - Rubriques prédéfinies (Composition, Indications, Posologie...)
-3. Sources autorisées : Vidal/BDPM/PasseportSanté/Sante.fr
+3. Sources autorisées : Vidal/BDPM/PasseportSanté/Sante.fr/med.tn
 4. Validation croisée des informations entre sources
 5. Aucun commentaire hors structure demandée
 
@@ -49,7 +104,6 @@ Processus :
 """}
     ]
 )
-
 llm2 = completion(
     model="llama3-70b-8192",
     api_base="https://api.groq.com/openai/v1",
@@ -88,7 +142,7 @@ Format de Sortie :
 llm3 = completion(
     model="llama-3.3-70b-versatile",
     api_base="https://api.groq.com/openai/v1",
-    api_key=os.getenv("GROQ2_API_KEY"),
+    api_key=os.getenv("GROQ3_API_KEY"),
     messages=[
         {"role": "system", "content": """💊 Assistant Pharmaceutique Clinicien
 Règles de Réponse :
@@ -129,6 +183,7 @@ class Medicalchatbot():
                 bdpm_tool,
                 passeport_tool,
                 santefr_tool,
+                med_custom_scraper  
             ],
             llm=llm1,
             verbose=True

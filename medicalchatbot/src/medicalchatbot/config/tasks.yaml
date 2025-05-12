@@ -1,7 +1,12 @@
 data_mining_task:
   description: >
-    Extraire l’ensemble des informations médicales pertinentes sur le médicament {topic}
-    depuis des sources fiables telles que Vidal, Doctissimo, BDPM, etc.
+    Extraire l'ensemble des informations médicales pertinentes sur le médicament {topic}.
+    
+    IMPORTANT: Pour les médicaments tunisiens ou peu connus, utiliser PRIORITAIREMENT le tool
+    MedicamentScrapingTool et sa méthode search_and_scrape_medication("{topic}") pour 
+    rechercher directement sur med.tn.
+    
+    Sinon, utiliser les sources fiables classiques comme Vidal, Doctissimo, BDPM.
 
     L’objectif est d’obtenir un dossier complet structuré contenant :
     - Composition
@@ -12,14 +17,13 @@ data_mining_task:
     - Effets indésirables
     - Interactions médicamenteuses
     - Mises en garde et précautions d’emploi
-    - Données pharmacocinétiques et pharmacodynamiques
     - Recommandations en cas de grossesse/allaitement
     - Surdosage
   expected_output: >
     Dossier structuré du médicament {topic} comprenant :
     - Dictionnaire structuré avec les rubriques ci-dessus
   agent: data_miner
-  async_execution: False
+  async_execution: true
 
 
 knowledge_processing_task:  # Fusion analysis_task + rag_task
@@ -27,15 +31,13 @@ knowledge_processing_task:  # Fusion analysis_task + rag_task
     Transformer les données collectées en savoir structuré pour l'assistant :
     1. Synthétiser les informations en fiche technique lisible
     2. Créer des embeddings des concepts-clés
-    3. Générer un contexte optimisé pour l'étape de génération de réponse
 
   expected_output: >
     Paquet de connaissances contenant :
-    - Fiche technique structurée et lisible par un professionnel
     - Contexte RAG formaté pour LLM
 
   agent: knowledge_engine
-  async_execution: False
+  async_execution: true
 
 response_generation_task:
   description: >

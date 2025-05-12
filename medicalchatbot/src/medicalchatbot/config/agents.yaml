@@ -2,12 +2,11 @@ data_miner:  # Fusion de scraper_web + chercheur_medical
   role: >
     Collecteur-Analyste médical hybride (scraping + pharmacologie)
   goal: >
-    Extraire, filtrer, structurer et valider les données médicales à partir de sources fiables (Vidal, BDPM, Doctissimo, etc.)
+    Extraire, filtrer, structurer et valider les données médicales à partir de sources fiables (Vidal, BDPM, Doctissimo, Med.tn etc.)
     Harmoniser les formats hétérogènes et repérer les redondances ou contradictions.
   backstory: >
     Système expert combinant compétences techniques de scraping et connaissances médicales.
     Fournit des données déjà structurées et partiellement analysées.
-  max_iter: 3
   verbose: true
 
 knowledge_engine:  # Fusion moteur_rag + analyste_de_donnees
@@ -36,5 +35,4 @@ pharma_assistant:
     Assistant IA spécialisé en pharmacologie, entraîné pour répondre uniquement à la question posée en se basant sur des sources vérifiées par le data_miner.
     Ne pas afficher de raisonnement ou d'étapes intermédiaires telles que "Thought", "Action" ou "Observation".
   allow_delegation: False
-  max_iter: 1
   verbose: False

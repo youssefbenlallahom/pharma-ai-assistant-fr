@@ -1,106 +1,480 @@
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MedAI Assistant</title>
-    <!-- Ajout du favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='medbot-icon.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='medbot-icon.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/medical.css') }}">
+    <!-- Favicon et icône Apple -->
+    <link
+      rel="icon"
+      type="image/gif"
+      href="{{ url_for('static', filename='medbot-icon.gif') }}"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='medbot-icon.gif') }}"
+    />
+    <!-- Style principal -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/medical.css') }}"
+    />
+    <!-- Dépendances externes -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        .robot-gif {
-            height: 40px;
-            width: auto;
-            margin-right: 0px;
-            margin-left: 5px;
-            margin-top: 5px;
-        }
-        
-        .ai-avatar .robot-gif {
-            height: 30px;
-            width: auto;
-            margin-right: 0px;
-        }
+      .robot-gif {
+        height: 40px;
+        width: auto;
+        margin-right: 0px;
+        margin-left: 5px;
+        margin-top: 5px;
+      }
+
+      .ai-avatar .robot-gif {
+        height: 30px;
+        width: auto;
+        margin-right: 0px;
+      }
+
+      .camera-button {
+        background: none;
+        border: none;
+        color: #2a70e2;
+        cursor: pointer;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.3s;
+        margin-right: 10px;
+      }
+
+      .camera-button:hover {
+        background-color: #f0f4fc;
+      }
+
+      /* Modification de l'input-container pour repositionner les éléments */
+      .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: var(--bg-input);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Placer les boutons média à gauche */
+      .media-button-group {
+        order: 1;
+        margin-right: 10px;
+      }
+
+      /* Déplacer l'input au milieu */
+      .chat-input {
+        order: 2;
+        flex-grow: 1;
+        padding: 15px 10px 10px 10px;
+      }
+
+
+      #cameraModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+      }
+
+      .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 12px;
+        width: 80%;
+        max-width: 600px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .close-modal {
+        position: absolute;
+        right: 20px;
+        top: 15px;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      #videoElement {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .capture-btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border: none;
+        background-color: #2a70e2;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s;
+      }
+
+      .capture-btn:hover {
+        background-color: #1c5abc;
+      }
+
+      #capturedImageContainer {
+        margin-top: 15px;
+        max-height: 300px;
+        overflow: hidden;
+        display: none;
+      }
+
+      #capturedImage {
+        width: 100%;
+        border-radius: 8px;
+      }
+
+      .processing-indicator {
+        display: none;
+        margin-top: 15px;
+        text-align: center;
+        color: #2a70e2;
+      }
+
+      .medication-result {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #f0f7ff;
+        display: none;
+      }
     </style>
-</head>
-<body>
+    <!-- À ajouter dans le <head> ou au début du <body> de votre HTML -->
+<div id="appConfig" 
+data-robot-image="{{ url_for('static', filename='robot_9066270.gif') }}" 
+style="display:none;"></div>
+  </head>
+  <body>
     <div class="app-container">
-        <header class="app-header">
-            <div class="app-logo">
-                <div class="logo-pulse"></div>
-                <!-- GIF de robot remplaçant l'icône par défaut -->
-                <img src="{{ url_for('static', filename='robot_9066270.gif') }}" alt="Robot médical" class="robot-gif">
+      <header class="app-header">
+        <div class="app-logo">
+          <div class="logo-pulse"></div>
+          <img
+            src="{{ url_for('static', filename='robot_9066270.gif') }}"
+            alt="Robot médical"
+            class="robot-gif"
+          />
+        </div>
+        <h1>MedAI Assistant</h1>
+        <button id="themeToggle" class="theme-toggle">
+          <svg
+            class="sun-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg
+            class="moon-icon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </header>
+
+
+      <div class="chat-container">
+        <div class="message-container" id="messageContainer">
+          <!-- Message initial -->
+          <div class="message ai-message animate__animated animate__fadeInUp">
+            <div class="avatar ai-avatar">
+              <div class="avatar-pulse"></div>
+              <img
+                src="{{ url_for('static', filename='robot_9066270.gif') }}"
+                alt="Robot médical"
+                class="robot-gif"
+              />
             </div>
-            <h1>MedAI Assistant</h1>
-            <button id="themeToggle" class="theme-toggle">
-                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
+            <div class="message-content">
+              <p>
+                Bonjour, je suis MedAI, votre assistant médical intelligent.
+                Posez-moi vos questions sur les médicaments, les posologies ou
+                les interactions.
+              </p>
+              <div class="medical-source">
+                <span>Sources fiables :</span>
+                <div class="source-tag">VIDAL</div>
+                <div class="source-tag">BDPM</div>
+                <div class="source-tag">HAS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-container">
+          <!-- Bouton caméra placé en premier (ordre: 1) -->
+          <div class="media-button-group">
+            <button class="camera-button" id="mediaBtn">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                ></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
             </button>
-        </header>
+            <div class="media-options" id="mediaOptions">
+              <div class="media-option" id="cameraOption">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                  ></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <span>Utiliser la caméra</span>
+              </div>
+              <div class="media-option" id="uploadOption">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Importer une image</span>
+              </div>
+            </div>
+          </div>
 
-        <div class="info-banner animate__animated animate__fadeIn">
-            <div class="info-icon">ℹ️</div>
-            <p>Consultez votre médecin pour tout avis médical. Cet outil est informatif uniquement.</p>
+          <!-- Champ de saisie (ordre: 2) -->
+          <textarea
+            class="chat-input"
+            id="userInput"
+            placeholder="Écrivez votre question médicale ici..."
+            rows="1"
+          ></textarea>
+          <button id="sendBtn" class="send-button">
+            <div class="send-ripple"></div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+            </svg>
+          </button>
+
+          <!-- Bouton d'envoi (ordre: 3) -->
+
+          <!-- Input file caché -->
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            style="display: none"
+          />
+
+    
+        </div>
+      </div>
+
+      <footer class="app-footer">
+        <p>
+          © 2025 MedAI Assistant ·
+          <a href="#" class="footer-link">Mentions légales</a> ·
+          <a href="#" class="footer-link">Confidentialité</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Modal pour la caméra -->
+    <div id="cameraModal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2a70e2"
+              stroke-width="2"
+            >
+              <path
+                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+              ></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <h3>Analyser votre médicament</h3>
+          </div>
+          <div class="modal-steps">
+            <div class="step active" id="captureStep">1. Capture</div>
+            <div class="step" id="analyzeStep">2. Analyse</div>
+            <div class="step" id="resultStep">3. Résultat</div>
+          </div>
         </div>
 
-        <div class="chat-container">
-            <div class="message-container" id="messageContainer">
-                <!-- Message initial -->
-                <div class="message ai-message animate__animated animate__fadeInUp">
-                    <div class="avatar ai-avatar">
-                        <div class="avatar-pulse"></div>
-                        <!-- GIF de robot dans l'avatar des messages également -->
-                        <img src="{{ url_for('static', filename='robot_9066270.gif') }}" alt="Robot médical" class="robot-gif">
-                    </div>
-                    <div class="message-content">
-                        <p>Bonjour, je suis MedAI, votre assistant médical intelligent. Posez-moi vos questions sur les médicaments, les posologies ou les interactions.</p>
-                        <div class="medical-source">
-                            <span>Sources fiables :</span>
-                            <div class="source-tag">VIDAL</div>
-                            <div class="source-tag">BDPM</div>
-                            <div class="source-tag">HAS</div>
-                        </div>
-                    </div>
-                </div>
+        <div class="modal-body">
+          <div class="capture-container">
+            <video id="videoElement" autoplay></video>
+            <div id="capturedImageContainer">
+              <img id="capturedImage" alt="Médicament capturé" />
             </div>
-            
-            <div class="input-container">
-                <textarea class="chat-input" id="userInput" placeholder="Écrivez votre question médicale ici..." rows="1"></textarea>
-                <button class="send-button" id="sendBtn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                    </svg>
-                    <div class="send-ripple"></div>
-                </button>
-                <div class="suggestion-chips">
-                    <button class="chip animate__animated animate__fadeIn">Paracétamol vs Ibuprofène</button>
-                    <button class="chip animate__animated animate__fadeIn" style="animation-delay: 0.2s">Effets secondaires Metformine</button>
-                    <button class="chip animate__animated animate__fadeIn" style="animation-delay: 0.4s">Vaccin contre la grippe</button>
-                </div>
+
+            <div class="capture-overlay" id="captureOverlay">
+              <div class="capture-guide">
+                <div class="guide-corner top-left"></div>
+                <div class="guide-corner top-right"></div>
+                <div class="guide-corner bottom-left"></div>
+                <div class="guide-corner bottom-right"></div>
+                <div class="guide-text">Centrez le médicament</div>
+              </div>
             </div>
+          </div>
+
+          <div class="medication-result" id="medicationResult">
+            <div class="result-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#28a745"
+                stroke-width="2"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="result-content">
+              <h4>Médicament détecté</h4>
+              <div class="medication-name" id="medicationName"></div>
+              <p id="medicationDesc"></p>
+            </div>
+          </div>
+
+          <div class="processing-indicator" id="processingIndicator">
+            <div class="spinner">
+              <div class="bounce1"></div>
+              <div class="bounce2"></div>
+              <div class="bounce3"></div>
+            </div>
+            <p>Analyse du médicament en cours...</p>
+          </div>
         </div>
 
-        <footer class="app-footer">
-            <p>© 2025 MedAI Assistant · Mentions légales · Confidentialité</p>
-        </footer>
+        
+        
+        
+        
+        <div class="modal-footer">
+          <button class="capture-btn" id="captureBtn">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Prendre une photo
+          </button>
+          <button
+            class="capture-btn"
+            id="useBtn"
+            style="display: none; background-color: #28a745"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Utiliser ce médicament
+          </button>
+          <button
+            class="capture-btn"
+            id="retakeBtn"
+            style="display: none; background-color: #6c757d"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 4v6h6"></path>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            Reprendre
+          </button>
+        </div>
+      </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/medical.js') }}"></script>
-</body>
+  </body>
 </html>
